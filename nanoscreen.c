@@ -192,7 +192,7 @@ int main(int argc, char *argv[]) {
 	// main RAM -- VideoCore will copy the primary framebuffer
 	// contents to this resource. It's 4X the OLED pixel dimensions
 	// (ideally the framebuffer resolution will match this) to allow
-	// for quality downsampling (in code below).
+	// for quality downsampling (see notes in code below).
 	if(!(screen_resource = vc_dispmanx_resource_create(
 	  VC_IMAGE_ARGB8888, WIDTH*4, HEIGHT*4, &handle))) {
 		vc_dispmanx_display_close(display);
@@ -280,12 +280,15 @@ int main(int argc, char *argv[]) {
 		// Downsampling from 384x256 to 96x64 is done here in
 		// software rather than the dispmanx code, as bilinear
 		// interpolation exhibits artifacts when downscaling
-		// more than 2:1. Box sampling is used instead to merge
-		// 16 pixels to 1, the result then reduced to 16-bit
-		// (5/6/5) color. There's probably ways to do this all
-		// on the GPU with a 2-step process in dispmanx, but
-		// that's unfamiliar territory and this project isn't
-		// all that serious. Instead, bit-twiddling...
+		// more than 2:1 (e.g. some dots in Pac Man are entirely
+		// lost, making the game unplayable, some horiz or vert
+		// lines in vector games are lost). Box sampling is used
+		// instead to average 16 pixels to 1, the result then
+		// reduced to 16-bit (5/6/5) color. There's probably
+		// ways to do this all on the GPU with a 2-step
+		// downsample in dispmanx, but that's unfamiliar
+		// territory and this project isn't all that serious.
+		// Instead, lots of bit-twiddling...
 		int      x, y, x1, y1;
 		uint32_t pixel32, rb, g;
 		uint16_t pixel16;
