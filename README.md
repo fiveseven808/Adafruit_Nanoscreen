@@ -6,7 +6,7 @@ This is UNSUPPORTED CODE and will not work on other screen types or sizes, pleas
 
 Recommended /boot/config.txt settings:
 
-# Not all monitors can handle this resolution,
+```# Not all monitors can handle this resolution,
 # but the framebuffer is there and correct and
 # nanoscreen will work with it.
 disable_overscan=1
@@ -16,3 +16,4 @@ hdmi_mode=87
 hdmi_cvt=384 256 60 1 0 0 0
 # Optional, for 'portrait' video:
 display_rotate=3
+```
