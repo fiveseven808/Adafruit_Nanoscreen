@@ -29,8 +29,9 @@
 
 #define WIDTH     128
 #define HEIGHT    128
-#define DC_PIN    23
-#define RESET_PIN 24
+#define DC_PIN    5
+#define RESET_PIN 6
+//#define BITRATE   3200000
 #define BITRATE   32000000
 #define SPI_MODE  SPI_MODE_0
 #define FPS       60
@@ -73,46 +74,12 @@ static struct spi_ioc_transfer
   .rx_nbits      = 0,
   .cs_change     = 0 };
 
-/*
-uint8_t
- initCommands[] = { // OLED init sequence
-  0xAE,             // SSD1331_CMD_DISPLAYOFF
-  0xA0, 0x72,       // SSD1331_CMD_SETREMAP RGB color 01110010
-                      // A0 = 0 Horizontal increment
-                      // A1 = 1 RAM Column 0 to 95 maps to Pin Seg (SA,SB,SC) 95 to 0
-                      // A2 = 0 normal order SA,SB,SC (e.g. RGB)
-                      // A3 = 0 Disable left-right swapping on COM
-                      // A4 = 1 Scan from COM [N-1] to COM0. Where N is the multiplex ratio.
-                      // A5 = 1 Enable COM Split Odd Even
-                      // A6 = 1 65k color format
-                      // A7 = 0 65k color format
-  0xA1, 0x00,       // SSD1331_CMD_STARTLINE
-  0xA2, 0x00,       // SSD1331_CMD_DISPLAYOFFSET
-  0xA4,             // SSD1331_CMD_NORMALDISPLAY
-  0xA8, 0x3F,       // SSD1331_CMD_SETMULTIPLEX
-                      // Set MUX ratio to N = 63d = 3Fh
-  0xAD, 0x8E,       // SSD1331_CMD_SETMASTER
-  0xB0, 0x0B,       // SSD1331_CMD_POWERMODE
-  0xB1, 0x31,       // SSD1331_CMD_PRECHARGE
-  0xB3, 0xF0,       // SSD1331_CMD_CLOCKDIV
-  0x8A, 0x64,       // SSD1331_CMD_PRECHARGEA
-  0x8B, 0x78,       // SSD1331_CMD_PRECHARGEB
-  0x8C, 0x64,       // SSD1331_CMD_PRECHARGEC
-  0xBB, 0x3A,       // SSD1331_CMD_PRECHARGELEVEL
-  0xBE, 0x3E,       // SSD1331_CMD_VCOMH
-  0x87, 0x06,       // SSD1331_CMD_MASTERCURRENT
-  0x81, 0x91,       // SSD1331_CMD_CONTRASTA
-  0x82, 0x50,       // SSD1331_CMD_CONTRASTB
-  0x83, 0x7D,       // SSD1331_CMD_CONTRASTC
-  0xAF },           // SSD1331_CMD_DISPLAYON
- areaCommands[] = { // OLED memory-fill sequence
-  0x75, 0, 63,      // SSD1331_CMD_SETROW
-  0x15, 0, 95 };    // SSD1331_CMD_SETCOLUMN
-*/
 
  uint8_t
    initCommands[] = { // OLED init sequence
     0xAE,             // SSD1351_CMD_DISPLAYOFF
+    0xFD, 0x12,        // Unlock OLED driver IC MCU interface from entering command [reset]
+    0xFD, 0xB1,        // STOLEN command lock something?
     0xA0, 0x72,       // SSD1351_CMD_SETREMAP RGB color 01110010
                         // A0 = 0 Horizontal increment
                         // A1 = 1 RAM Column 0 to 95 maps to Pin Seg (SA,SB,SC) 95 to 0
@@ -123,7 +90,7 @@ uint8_t
                         // A6 = 1 65k color format
                         // A7 = 0 65k color format
     0xA1, 0x00,       // SSD1351_CMD_STARTLINE
-    //0xA2, 0x00,       // SSD1351_CMD_DISPLAYOFFSET
+    0xA2, 0x00,       // SSD1351_CMD_DISPLAYOFFSET
                         // This command is locked by Command FDh by default. To unlock it, please refer to Command FDh.
     0xA6,             // SSD1351_CMD_NORMALDISPLAY
                         // A6h : Reset to normal display [reset]
@@ -133,13 +100,13 @@ uint8_t
                         // No Equivilant
     //0xB0, 0x0B,       // SSD1351_CMD_POWERMODE
                         //No Equivilant
-    //0xB1, 0x31,       // SSD1351_CMD_PRECHARGE
+    0xB1, 0x31,       // SSD1351_CMD_PRECHARGE
                         // Phase 1 and 2 period adjustment
                         // 31h = 00110001 for SSD1331
                         // Phase 1 = 1d DCLK (5-31 for 1351)
                         // Phase 2 = 3d DCLK (3-15 for 1351)
                         // This command is locked by Command FDh by default. To unlock it, please refer to Command FDh.
-    //0xB3, 0x04,       // SSD1351_CMD_CLOCKDIV
+    0xB3, 0x04,       // SSD1351_CMD_CLOCKDIV
                         // 1331 is F0 = 15 + 1 = 16d
                         // 1351 0x04 = 16d
                         // 1351 0x0Ah is highest divide 1024
@@ -158,7 +125,9 @@ uint8_t
     //0x81, 0x91,       // SSD1351_CMD_CONTRASTA
     //0x82, 0x50,       // SSD1351_CMD_CONTRASTB
     //0x83, 0x7D,       // SSD1351_CMD_CONTRASTC
-    0xAF },           // SSD1351_CMD_DISPLAYON
+    0xAF               // SSD1351_CMD_DISPLAYON
+    //0xA5                // Turn screen all white
+    },
    areaCommands[] = { // OLED memory-fill sequence
     0x75, 0, 127,      // SSD1351_CMD_SETROW
     0x15, 0, 127 };    // SSD1351_CMD_SETCOLUMN
@@ -237,6 +206,35 @@ static void runInit() {
     }
 
 
+
+/*
+// This set of init commands are stolen from fbtft. they do not change the output...
+uint8_t
+  initCommands[] = { // OLED init sequence
+   0xAE,             // SSD1351_CMD_DISPLAYOFF
+   0xFD, 0x12,        // Unlock OLED driver IC MCU interface from entering command [reset]
+   0xFD, 0xB1,        // STOLEN command lock something?
+   0xb3, 0xf1,
+   0xca, 0x7f,
+   0xa1, 0x00,
+   0xa2, 0x00,
+   0xb5, 0x00,
+   0xab, 0x01,
+   0xb1, 0x32,
+   0xb4, 0xa0, 0xb5, 0x55,
+   0xbb, 0x17,
+   0xbe, 0x05,
+   0xc1, 0xc8, 0x80, 0xc8,
+   0xc7, 0x0f,
+   0xb6, 0x01,
+   0xa6,
+   0xAF },           // SSD1351_CMD_DISPLAYON
+  areaCommands[] = { // OLED memory-fill sequence
+   0x75, 0x00, 0x7F,      // SSD1351_CMD_SETROW
+   0x15, 0x00, 0x7F};    // SSD1351_CMD_SETCOLUMN
+*/
+
+
 // UTILITY FUNCTIONS -------------------------------------------------------
 
 // Detect Pi board type.  Doesn't return super-granular details,
@@ -303,6 +301,7 @@ static void writeCommands(uint8_t *c, uint8_t len) {
 	cmd.tx_buf = (unsigned long)c;
 	cmd.len    = len;
 	(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &cmd);
+  printf("just finished init cycle\n");
 }
 
 // Issue data (not command) to OLED
@@ -390,6 +389,7 @@ int main(int argc, char *argv[]) {
 
 	// Initialize OLED
 	writeCommands(initCommands, sizeof(initCommands));
+  //return err(3, "finished!\n");
 
 	// MAIN LOOP -------------------------------------------------------
 
@@ -468,22 +468,23 @@ int main(int argc, char *argv[]) {
 		// Max SPI transfer size is 4096 bytes
 		// 128 * 128 * 2 = 32768 bytes
 		// 32768 / 4096 = 8 full transfers, no fraction needed
-		dat.tx_buf = (uint32_t)pixelBuf;
+		/*dat.tx_buf = (uint32_t)pixelBuf;
 		(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &dat);
 		dat.tx_buf = (uint32_t)&pixelBuf[2048];
 		(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &dat);
 		dat.tx_buf = (uint32_t)&pixelBuf[4096];
+    (void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &dat);
+    dat.tx_buf = (uint32_t)&pixelBuf[6144];
 		(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &dat);
-        dat.tx_buf = (uint32_t)&pixelBuf[6144];
+    dat.tx_buf = (uint32_t)&pixelBuf[8192];
 		(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &dat);
-        dat.tx_buf = (uint32_t)&pixelBuf[8192];
+    dat.tx_buf = (uint32_t)&pixelBuf[10240];
 		(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &dat);
-        dat.tx_buf = (uint32_t)&pixelBuf[10240];
+    dat.tx_buf = (uint32_t)&pixelBuf[12288];
 		(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &dat);
-        dat.tx_buf = (uint32_t)&pixelBuf[12288];
+    dat.tx_buf = (uint32_t)&pixelBuf[14336];
 		(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &dat);
-        dat.tx_buf = (uint32_t)&pixelBuf[14336];
-		(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &dat);
+    */
 	}
 
 	vc_dispmanx_resource_delete(screen_resource);
