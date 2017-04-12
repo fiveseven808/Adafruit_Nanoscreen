@@ -8,12 +8,16 @@ CFLAGS=-Ofast -fomit-frame-pointer \
  -L/opt/vc/lib
 LIBS=-pthread -lrt -lm -lbcm_host
 
-nanoscreen: nanoscreen.c
-	cc $(CFLAGS) nanoscreen.c $(LIBS) -o nanoscreen
-	strip nanoscreen
+#nanoscreen: nanoscreen.c
+#	cc $(CFLAGS) nanoscreen.c $(LIBS) -o nanoscreen
+#	strip nanoscreen
 
-install:
-	mv nanoscreen /usr/local/bin
+nanoscreen: nanoscreen_ssd1351.c
+		cc $(CFLAGS) nanoscreen_ssd1351.c $(LIBS) -o nanoscreen_ssd1351
+		strip nanoscreen_ssd1351
 
-clean:
-	rm -f nanoscreen
+#install:
+#	mv nanoscreen /usr/local/bin
+
+#clean:
+#	rm -f nanoscreen
