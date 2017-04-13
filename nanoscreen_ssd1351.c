@@ -22,6 +22,8 @@
 #include <linux/spi/spidev.h>
 #include <bcm_host.h>
 
+#include "nanoscreen.h"
+
 
 // CONFIGURATION AND GLOBAL STUFF ------------------------------------------
 
@@ -161,6 +163,79 @@ uint8_t
     0x75, 0, 127,      // SSD1351_CMD_SETROW
     0x15, 0, 127 };    // SSD1351_CMD_SETCOLUMN
 
+static void runInit() {
+    // Initialization Sequence
+        writeCommands(SSD1351_CMD_COMMANDLOCK);  // set command lock
+        writeData(0x12);
+        writeCommands(SSD1351_CMD_COMMANDLOCK);  // set command lock
+        writeData(0xB1);
+
+        writeCommands(SSD1351_CMD_DISPLAYOFF);  		// 0xAE
+
+        writeCommands(SSD1351_CMD_CLOCKDIV);  		// 0xB3
+        writeCommands(0xF1);  						// 7:4 = Oscillator Frequency, 3:0 = CLK Div Ratio (A[3:0]+1 = 1..16)
+
+        writeCommands(SSD1351_CMD_MUXRATIO);
+        writeData(127);
+
+        writeCommands(SSD1351_CMD_SETREMAP);
+        writeData(0x74);
+
+        writeCommands(SSD1351_CMD_SETCOLUMN);
+        writeData(0x00);
+        writeData(0x7F);
+        writeCommands(SSD1351_CMD_SETROW);
+        writeData(0x00);
+        writeData(0x7F);
+
+        writeCommands(SSD1351_CMD_STARTLINE); 		// 0xA1
+        if (SSD1351HEIGHT == 96) {
+          writeData(96);
+        } else {
+          writeData(0);
+        }
+
+
+        writeCommands(SSD1351_CMD_DISPLAYOFFSET); 	// 0xA2
+        writeData(0x0);
+
+        writeCommands(SSD1351_CMD_SETGPIO);
+        writeData(0x00);
+
+        writeCommands(SSD1351_CMD_FUNCTIONSELECT);
+        writeData(0x01); // internal (diode drop)
+        //writeData(0x01); // external bias
+
+    //    writeCommands(SSSD1351_CMD_SETPHASELENGTH);
+    //    writeData(0x32);
+
+        writeCommands(SSD1351_CMD_PRECHARGE);  		// 0xB1
+        writeCommands(0x32);
+
+        writeCommands(SSD1351_CMD_VCOMH);  			// 0xBE
+        writeCommands(0x05);
+
+        writeCommands(SSD1351_CMD_NORMALDISPLAY);  	// 0xA6
+
+        writeCommands(SSD1351_CMD_CONTRASTABC);
+        writeData(0xC8);
+        writeData(0x80);
+        writeData(0xC8);
+
+        writeCommands(SSD1351_CMD_CONTRASTMASTER);
+        writeData(0x0F);
+
+        writeCommands(SSD1351_CMD_SETVSL );
+        writeData(0xA0);
+        writeData(0xB5);
+        writeData(0x55);
+
+        writeCommands(SSD1351_CMD_PRECHARGE2);
+        writeData(0x01);
+
+        writeCommands(SSD1351_CMD_DISPLAYON);		//--turn on oled panel
+    }
+
 
 // UTILITY FUNCTIONS -------------------------------------------------------
 
@@ -227,6 +302,15 @@ static void writeCommands(uint8_t *c, uint8_t len) {
 	*gpioClr   = dcMask; // 0/low = command, 1/high = data
 	cmd.tx_buf = (unsigned long)c;
 	cmd.len    = len;
+	(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &cmd);
+}
+
+// Issue data (not command) to OLED
+static void writeData(uint8_t *c) {
+	*gpioSet   = dcMask; // 0/low = command, 1/high = data
+	cmd.tx_buf = (unsigned long)c;
+	//cmd.len    = len;
+    cmd.len    = lsizeof(c)
 	(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &cmd);
 }
 
