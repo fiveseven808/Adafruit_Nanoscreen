@@ -111,7 +111,8 @@ class SSD1351Base(object):
         self.width = width
         self.height = height
         self._pages = height//8
-        self._buffer = [0]*(width*self._pages)
+        #self._buffer = [0]*(width*self._pages)
+        self._buffer = [0]*(width*height*18)
         # Default to platform GPIO if not provided.
         self._gpio = gpio
         if self._gpio is None:
@@ -199,9 +200,12 @@ class SSD1351Base(object):
         self.command(SSD1351_CMD_SETCOLUMN)
         self.command(0)              # Column start address. (0 = reset)
         self.command(self.width-1)   # Column end address.
-        self.command(SSD1306_PAGEADDR)
-        self.command(0)              # Page start address. (0 = reset)
-        self.command(self._pages-1)  # Page end address.
+        self.command(SSD1351_CMD_SETROW)
+        self.command(0)              # Row start address. (0 = reset)
+        self.command(self.height-1)
+        #self.command(SSD1306_PAGEADDR)
+        #self.command(0)              # Page start address. (0 = reset)
+        #self.command(self._pages-1)  # Page end address.
         # Write buffer data.
         if self._spi is not None:
             # Set DC high for data.
@@ -213,11 +217,34 @@ class SSD1351Base(object):
                 control = 0x40   # Co = 0, DC = 0
                 self._i2c.writeList(control, self._buffer[i:i+16])
 
+    def display_white(self):
+        """Write display buffer to physical display."""
+        #This needs to really be modified for the SSD1351....
+        self.command(SSD1351_CMD_SETCOLUMN)
+        self.command(0)              # Column start address. (0 = reset)
+        self.command(self.width-1)   # Column end address.
+        self.command(SSD1351_CMD_SETROW)
+        self.command(0)              # Row start address. (0 = reset)
+        self.command(self.height-1)
+        #self.command(SSD1306_PAGEADDR)
+        #self.command(0)              # Page start address. (0 = reset)
+        #self.command(self._pages-1)  # Page end address.
+        # Write buffer data.
+        if self._spi is not None:
+            # Set DC high for data.
+            self._gpio.set_high(self._dc)
+            # Write buffer.
+            self._spi.write(1)
+        else:
+            for i in range(0, len(self._buffer), 16):
+                control = 0x40   # Co = 0, DC = 0
+                self._i2c.writeList(control, self._buffer[i:i+16])
+
     def image(self, image):
         """Set buffer to value of Python Imaging Library image.  The image should
         be in 1 bit mode and a size equal to the display size.
         """
-        # Shit... this one is more important to conver to SSD1351... 
+        # Shit... this one is more important to conver to SSD1351...
         if image.mode != '1':
             raise ValueError('Image must be in mode 1.')
         imwidth, imheight = image.size
@@ -240,6 +267,7 @@ class SSD1351Base(object):
                 # Update buffer byte and increment to next byte.
                 self._buffer[index] = bits
                 index += 1
+
 
     def clear(self):
         """Clear contents of image buffer."""
