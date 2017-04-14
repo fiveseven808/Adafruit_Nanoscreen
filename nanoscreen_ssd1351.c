@@ -22,7 +22,7 @@
 #include <linux/spi/spidev.h>
 #include <bcm_host.h>
 
-#include "nanoscreen.h"
+//#include "nanoscreen.h"
 
 
 // CONFIGURATION AND GLOBAL STUFF ------------------------------------------
@@ -125,14 +125,15 @@ static struct spi_ioc_transfer
     //0x81, 0x91,       // SSD1351_CMD_CONTRASTA
     //0x82, 0x50,       // SSD1351_CMD_CONTRASTB
     //0x83, 0x7D,       // SSD1351_CMD_CONTRASTC
-    0xAF               // SSD1351_CMD_DISPLAYON
+    0xAF,               // SSD1351_CMD_DISPLAYON
+	0x5c
     //0xA5                // Turn screen all white
     },
    areaCommands[] = { // OLED memory-fill sequence
     0x75, 0, 127,      // SSD1351_CMD_SETROW
     0x15, 0, 127 };    // SSD1351_CMD_SETCOLUMN
 
-static void runInit() {
+/*static void runInit() {
     // Initialization Sequence
         writeCommands(SSD1351_CMD_COMMANDLOCK);  // set command lock
         writeData(0x12);
@@ -204,7 +205,7 @@ static void runInit() {
 
         writeCommands(SSD1351_CMD_DISPLAYON);		//--turn on oled panel
     }
-
+*/
 
 
 /*
@@ -301,9 +302,10 @@ static void writeCommands(uint8_t *c, uint8_t len) {
 	cmd.tx_buf = (unsigned long)c;
 	cmd.len    = len;
 	(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &cmd);
-  printf("just finished init cycle\n");
+//  printf("just finished init cycle\n");
 }
 
+/*
 // Issue data (not command) to OLED
 static void writeData(uint8_t *c) {
 	*gpioSet   = dcMask; // 0/low = command, 1/high = data
@@ -312,6 +314,7 @@ static void writeData(uint8_t *c) {
     cmd.len    = lsizeof(c)
 	(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &cmd);
 }
+*/
 
 
 // MAIN CODE ---------------------------------------------------------------
@@ -468,23 +471,23 @@ int main(int argc, char *argv[]) {
 		// Max SPI transfer size is 4096 bytes
 		// 128 * 128 * 2 = 32768 bytes
 		// 32768 / 4096 = 8 full transfers, no fraction needed
-		/*dat.tx_buf = (uint32_t)pixelBuf;
+		dat.tx_buf = (uint32_t)pixelBuf;
 		(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &dat);
 		dat.tx_buf = (uint32_t)&pixelBuf[2048];
 		(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &dat);
 		dat.tx_buf = (uint32_t)&pixelBuf[4096];
-    (void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &dat);
-    dat.tx_buf = (uint32_t)&pixelBuf[6144];
 		(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &dat);
-    dat.tx_buf = (uint32_t)&pixelBuf[8192];
+		dat.tx_buf = (uint32_t)&pixelBuf[6144];
 		(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &dat);
-    dat.tx_buf = (uint32_t)&pixelBuf[10240];
+		dat.tx_buf = (uint32_t)&pixelBuf[8192];
 		(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &dat);
-    dat.tx_buf = (uint32_t)&pixelBuf[12288];
+		dat.tx_buf = (uint32_t)&pixelBuf[10240];
 		(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &dat);
-    dat.tx_buf = (uint32_t)&pixelBuf[14336];
+		dat.tx_buf = (uint32_t)&pixelBuf[12288];
 		(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &dat);
-    */
+		dat.tx_buf = (uint32_t)&pixelBuf[14336];
+		(void)ioctl(fdSPI0, SPI_IOC_MESSAGE(1), &dat);
+    
 	}
 
 	vc_dispmanx_resource_delete(screen_resource);

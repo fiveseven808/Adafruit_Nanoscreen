@@ -81,21 +81,16 @@ disp.begin()
 disp.clear()
 disp.display()
 
+
 disp.command(SSD1351_CMD_SETCOLUMN)
 disp.data(0)              # Column start address. (0 = reset)
 disp.data(disp.width-1)   # Column end address.
 disp.command(SSD1351_CMD_SETROW)
 disp.data(0)              # Row start address. (0 = reset)
 disp.data(disp.height-1)
+disp.command(SSD1351_CMD_WRITERAM)
 
-disp.data(0xff)
-disp.data(0xff)
-disp.data(0xff)
-disp.data(0xff)
-disp.data(0xff)
-disp.data(0xff)
-disp.data(0xff)
-disp.data(0xff)
-disp.data(0xff)
-disp.data(0xff)
-disp.data(0xff)
+disp.command(SSD1351_CMD_DISPLAYALLOFF)
+
+for i in range(1,15000):
+    disp.data(0xf0)
