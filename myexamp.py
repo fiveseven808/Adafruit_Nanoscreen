@@ -34,8 +34,7 @@ SSD1351_CMD_HORIZSCROLL = 0x96
 SSD1351_CMD_STOPSCROLL = 0x9E
 SSD1351_CMD_STARTSCROLL = 0x9F
 
-height = 128
-width = 128
+height = 12
 
 # Raspberry Pi pin configuration:
 RST = 6
@@ -83,8 +82,20 @@ disp.clear()
 disp.display()
 
 disp.command(SSD1351_CMD_SETCOLUMN)
-disp.command(0)              # Column start address. (0 = reset)
-disp.command(disp.width-1)   # Column end address.
+disp.data(0)              # Column start address. (0 = reset)
+disp.data(disp.width-1)   # Column end address.
 disp.command(SSD1351_CMD_SETROW)
-disp.command(0)              # Row start address. (0 = reset)
-disp.command(disp.height-1)
+disp.data(0)              # Row start address. (0 = reset)
+disp.data(disp.height-1)
+
+disp.data(0xff)
+disp.data(0xff)
+disp.data(0xff)
+disp.data(0xff)
+disp.data(0xff)
+disp.data(0xff)
+disp.data(0xff)
+disp.data(0xff)
+disp.data(0xff)
+disp.data(0xff)
+disp.data(0xff)
