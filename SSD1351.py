@@ -1,4 +1,4 @@
-self.command# Copyright (c) 2014 Adafruit Industries
+# Copyright (c) 2014 Adafruit Industries
 # Author: Tony DiCola
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -105,7 +105,7 @@ class SSD1351Base(object):
     def __init__(self, width, height, rst, dc=None, sclk=None, din=None, cs=None,
                  gpio=None, spi=None, i2c_bus=None, i2c_address=SSD1306_I2C_ADDRESS,
                  i2c=None):
-        self._log = logging.getLogger('Adafruit_SSD1306.SSD1351Base')
+        self._log = logging.getLogger('Adafruit_SSD1351.SSD1351Base')
         self._spi = None
         self._i2c = None
         self.width = width
@@ -217,6 +217,7 @@ class SSD1351Base(object):
         """Set buffer to value of Python Imaging Library image.  The image should
         be in 1 bit mode and a size equal to the display size.
         """
+        # Shit... this one is more important to conver to SSD1351... 
         if image.mode != '1':
             raise ValueError('Image must be in mode 1.')
         imwidth, imheight = image.size
@@ -323,4 +324,5 @@ class SSD1351_128_128(SSD1351Base):
         self.data( 0x55)
         self.command(SSD1351_CMD_PRECHARGE2)
         self.data( 0x01)
-        self.command(SSD1351_CMD_DISPLAYON)		//--turn on oled panel
+        self.command(SSD1351_CMD_DISPLAYON)
+        #self.command(SSD1351_CMD_DISPLAYALLOFF)	#--turn on oled panel
